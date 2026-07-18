@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PDF Viewer Help</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 40px 24px;
+      line-height: 1.6;
+      color: #222;
+      background: #fff;
+    }
+    h1 {
+      font-size: 2em;
+      border-bottom: 2px solid #d70000;
+      padding-bottom: 8px;
+      margin-bottom: 16px;
+    }
+    h2 {
+      font-size: 1.4em;
+      margin-top: 32px;
+      color: #22303c;
+    }
+    h3 {
+      font-size: 1.1em;
+      margin-top: 24px;
+      color: #444;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0;
+    }
+    th, td {
+      border: 1px solid #c5d0db;
+      padding: 8px 12px;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: #f4f6f8;
+    }
+    code, kbd {
+      font-family: Consolas, "Liberation Mono", Menlo, monospace;
+      background: #f4f6f8;
+      padding: 2px 5px;
+      border-radius: 3px;
+      font-size: 0.92em;
+    }
+    kbd {
+      border: 1px solid #c5d0db;
+      box-shadow: 0 1px 0 #c5d0db;
+    }
+    ul {
+      padding-left: 22px;
+    }
+    li {
+      margin: 6px 0;
+    }
+    .note {
+      background: #e8f0fe;
+      border-left: 4px solid #7ea6d9;
+      padding: 12px 16px;
+      margin: 16px 0;
+      border-radius: 4px;
+    }
+    .warning {
+      background: #fff4e5;
+      border-left: 4px solid #e68a00;
+      padding: 12px 16px;
+      margin: 16px 0;
+      border-radius: 4px;
+    }
+    .footer {
+      margin-top: 48px;
+      font-size: 0.9em;
+      color: #666;
+      border-top: 1px solid #d7dde4;
+      padding-top: 16px;
+    }
+    @media print {
+      body { padding: 0; }
+      h1, h2, h3 { page-break-after: avoid; }
+      table { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+
+<h1>PDF Viewer Help</h1>
+<p>
+  A fast, multi-threaded PDF viewer built with PySide6 and PyMuPDF (<code>fitz</code>).
+  It supports single-page and two-page spreads, continuous scrolling, search, drag panning, and fit-to-window zoom.
+</p>
+
+<h2>Starting the Program</h2>
+<ul>
+  <li>Run <code>pdfpro.pyw</code> directly from Python.</li>
+  <li>To open a document immediately, pass the PDF path as a command-line argument:
+    <br><code>python pdfpro.pyw "document.pdf"</code>
+  </li>
+  <li>Click <strong>Open PDF</strong> in the sidebar to browse for a file.</li>
+</ul>
+
+<h2>Sidebar Controls</h2>
+<table>
+  <tr><th>Button</th><th>Action</th></tr>
+  <tr><td><strong>Open PDF</strong></td><td>Choose a PDF file to view.</td></tr>
+  <tr><td><strong>Zoom +</strong></td><td>Zoom in by 10% (disables fit-to-window).</td></tr>
+  <tr><td><strong>Zoom –</strong></td><td>Zoom out by 10% (disables fit-to-window).</td></tr>
+  <tr><td><strong>Fit page</strong></td><td>Fit the current page/spread to the window.</td></tr>
+  <tr><td><strong>Continuous / Single-scroll</strong></td><td>Toggle between continuous scroll and single-page view.</td></tr>
+  <tr><td><strong>Two pages / Single page</strong></td><td>Toggle two-page spreads on or off.</td></tr>
+  <tr><td><strong>Cover mode / No cover</strong></td><td>When two-page mode is on, show page 1 alone on the first spread (like a book cover).</td></tr>
+</table>
+
+<h2>Page Navigation</h2>
+<table>
+  <tr><th>Control</th><th>Action</th></tr>
+  <tr><td><strong>Vertical slider</strong></td><td>Jump quickly through pages or scroll position.</td></tr>
+  <tr><td><strong>Mouse wheel</strong></td><td>In single-page mode, wheel down/up turns to the next/previous page. In continuous mode, the page scrolls normally.</td></tr>
+  <tr><td><strong>Drag with left mouse</strong></td><td>Pan the page horizontally and vertically when it is larger than the viewport.</td></tr>
+</table>
+
+<h2>Search</h2>
+<ul>
+  <li>Type a term into the <strong>Search text</strong> box in the sidebar.</li>
+  <li>Click the <strong>&gt;</strong> arrow button or press <kbd>F3</kbd> to jump to the next match.</li>
+  <li>Press <kbd>Shift</kbd>+<kbd>F3</kbd> to jump to the previous match.</li>
+  <li>Matching pages are listed in the status area. Matches are highlighted in yellow on the pages.</li>
+</ul>
+
+<h2>Fullscreen</h2>
+<ul>
+  <li>Double-click anywhere on the page, or on the continuous view, to enter/exit fullscreen.</li>
+  <li>When leaving fullscreen, the window returns to its previous size.</li>
+</ul>
+
+<h2>Status Label</h2>
+<p>
+  The bottom of the sidebar shows:
+</p>
+<ul>
+  <li>Current page number and total pages.</li>
+  <li>Current zoom level (e.g., <code>1.00x</code>).</li>
+  <li>Current view mode (<strong>Continuous</strong> or <strong>Single</strong>).</li>
+  <li>Number of pages containing search matches, when searching.</li>
+</ul>
+
+<h2>View Modes Explained</h2>
+<h3>Single page</h3>
+<p>
+  Displays one logical page at a time. Use the wheel, slider, or keyboard to move to the next or previous page. Scroll positions are remembered while browsing.
+</p>
+
+<h3>Continuous</h3>
+<p>
+  Displays all pages in one long scrollable column. The sidebar slider controls the scroll position. The current page is updated automatically to whichever page is most visible in the viewport.
+</p>
+
+<h3>Two-page mode</h3>
+<p>
+  Pairs pages side by side. Use with or without <strong>Cover mode</strong>:
+</p>
+<ul>
+  <li><strong>Cover mode ON:</strong> page 1 is shown alone, then pages 2–3, 4–5, etc.</li>
+  <li><strong>Cover mode OFF:</strong> pages are paired 1–2, 3–4, 5–6, etc.</li>
+</ul>
+
+<div class="note">
+  <strong>Tip:</strong> In fit mode, zoom is recalculated automatically when you resize the window, switch pages, or change the view layout.
+</div>
+
+<h2>Rendering</h2>
+<p>
+  Pages render in parallel on background threads for smooth navigation. If a page is not yet rendered, a placeholder is shown first, and the final image appears as soon as it is ready.
+</p>
+
+<h2>Keyboard Shortcuts</h2>
+<table>
+  <tr><th>Key</th><th>Action</th></tr>
+  <tr><td><kbd>F3</kbd></td><td>Jump to next search result.</td></tr>
+  <tr><td><kbd>Shift</kbd> + <kbd>F3</kbd></td><td>Jump to previous search result.</td></tr>
+</table>
+
+<h2>License</h2>
+
+<p>
+  This project is licensed under the GNU Affero General Public License v3.0 (AGPL-3.0). See the <code>LICENSE</code> file for details.
+</p>
+
+<h3>Third-party dependencies</h3>
+
+<p>
+  This project uses third-party libraries, including:
+</p>
+
+<ul>
+  <li><strong>PySide6 / Qt for Python</strong> — available under LGPLv3/GPLv3/commercial Qt licensing</li>
+  <li><strong>PyMuPDF (fitz)</strong> — available under the GNU AGPL or a commercial license from Artifex</li>
+</ul>
+
+<p>
+  Your use, distribution, and deployment of this software must also comply with the licenses of these dependencies.
+</p>
+
+<h3>Important note for commercial users</h3>
+
+<p>
+  If you distribute this application or modified versions of it, you are responsible for complying with the license obligations of all bundled dependencies.
+</p>
+
+<p>
+  In particular, PyMuPDF is provided under AGPL or a separate commercial license. If AGPL obligations are not acceptable for your use case, you may need to obtain a commercial license for PyMuPDF or replace that dependency.
+</p>
+
+<div class="warning">
+  This repository is intended to remain open source. If you redistribute modified versions, you must preserve the applicable open-source license terms.
+</div>
+
+<div class="footer">
+  PDF Viewer &mdash; PySide6 / PyMuPDF based viewer. Help generated for <code>pdfpro.pyw</code>.
+</div>
+
+</body>
+</html>
