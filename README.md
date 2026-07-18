@@ -3,6 +3,9 @@
 A fast, multi-threaded PDF viewer built with PySide6 and PyMuPDF (`fitz`).
 It supports single-page and two-page spreads, continuous scrolling, search, drag panning, and fit-to-window zoom.
 
+<img width="1021" height="634" alt="grafik" src="https://github.com/user-attachments/assets/a7bbed78-5179-41ae-9c15-c6e5e6e9e40b" />
+
+
 ## Starting the Program
 
 - Run `pdfpro.pyw` directly from Python.
