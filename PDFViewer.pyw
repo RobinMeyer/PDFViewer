@@ -138,6 +138,8 @@ class PageDisplayLabel(QLabel):
 
 
 class PDFViewer(QMainWindow):
+    CACHE_PAGE_LIMIT = 2000
+
     SIDEBAR_BUTTON_STYLE = """
         QPushButton {
             background-color: #f4f6f8;
@@ -272,6 +274,7 @@ class PDFViewer(QMainWindow):
         self.render_queue = deque()
         self.page_size_cache = {}
         self.rendered_page_cache = {}
+        self.cache_rendered_pages = True
         self.render_thread_count = max(1, (os.cpu_count() or 2) - 1)
         #self.render_thread_count = 7
         self.render_queue_lock = threading.Lock()
@@ -461,6 +464,7 @@ class PDFViewer(QMainWindow):
             self.pending_single_page_scroll_restore = False
             self.page_size_cache = {}
             self.rendered_page_cache = {}
+            self.cache_rendered_pages = len(self.doc) <= self.CACHE_PAGE_LIMIT
             self.setWindowTitle(f"PDF Viewer - {os.path.basename(file_path)}")
             self.render_view()
         except Exception as e:
@@ -521,6 +525,9 @@ class PDFViewer(QMainWindow):
         return (page_index, round(zoom, 4))
 
     def get_cached_base_pixmap(self, page_index, zoom):
+        if not self.cache_rendered_pages:
+            return None
+
         return self.rendered_page_cache.get(self.get_render_cache_key(page_index, zoom))
 
     def get_display_pixmap(self, page_index, zoom):
@@ -531,7 +538,14 @@ class PDFViewer(QMainWindow):
         return self.apply_search_highlights(base_pixmap, page_index, zoom)
 
     def set_cached_base_pixmap(self, page_index, zoom, pixmap):
+        if not self.cache_rendered_pages:
+            return
+
         self.rendered_page_cache[self.get_render_cache_key(page_index, zoom)] = pixmap
+
+    def is_page_rendered_at_zoom(self, page_index, zoom):
+        label = self.page_label_lookup.get(page_index)
+        return label is not None and getattr(label, "rendered_zoom", None) == round(zoom, 4)
 
     def build_pixmap_from_bytes(self, samples, width, height, stride):
         image = QImage(samples, width, height, stride, QImage.Format_RGB888).copy()
@@ -1030,6 +1044,18 @@ class PDFViewer(QMainWindow):
         return pages
 
     def start_parallel_render(self, zoom, generation):
+        if not self.cache_rendered_pages:
+            for priority, page_index in enumerate(self.get_visible_priority_pages()):
+                self.enqueue_page_render(
+                    page_index,
+                    self.get_render_zoom_for_page(page_index, zoom),
+                    generation,
+                    priority,
+                )
+            self.deferred_parallel_pages = []
+            self.deferred_parallel_timer.stop()
+            return
+
         pages = self.get_parallel_render_pages()
 
         if self.continuous_mode:
@@ -1133,6 +1159,12 @@ class PDFViewer(QMainWindow):
         return self.get_visible_priority_pages()
 
     def start_fallback_render(self, zoom, generation):
+        if not self.cache_rendered_pages:
+            self.fallback_render_pages = []
+            self.fallback_render_index = 0
+            self.fallback_render_timer.stop()
+            return
+
         page_source = self.get_fallback_render_pages()
 
         fallback_pages = []
@@ -1208,6 +1240,7 @@ class PDFViewer(QMainWindow):
         label.setStyleSheet("")
         label.setPixmap(pixmap)
         label.setFixedSize(pixmap.size())
+        label.rendered_zoom = round(zoom, 4)
 
     def apply_cached_pixmap_to_label(self, label, page_index, zoom):
         cached_pixmap = self.get_display_pixmap(page_index, zoom)
@@ -1218,10 +1251,11 @@ class PDFViewer(QMainWindow):
         label.setStyleSheet("")
         label.setPixmap(cached_pixmap)
         label.setFixedSize(cached_pixmap.size())
+        label.rendered_zoom = round(zoom, 4)
         return True
 
     def render_initial_visible_pages(self, zoom):
-        if not self.doc:
+        if not self.doc or not self.cache_rendered_pages:
             return
 
         if self.continuous_mode:
@@ -1254,6 +1288,7 @@ class PDFViewer(QMainWindow):
                     render_key in self.active_render_jobs
                     or render_key in self.queued_render_jobs
                     or self.get_cached_base_pixmap(page_index, zoom) is not None
+                    or self.is_page_rendered_at_zoom(page_index, zoom)
                 ):
                     return
 
@@ -1329,6 +1364,7 @@ class PDFViewer(QMainWindow):
         label.setStyleSheet("")
         label.setPixmap(pixmap)
         label.setFixedSize(pixmap.size())
+        label.rendered_zoom = round(zoom, 4)
 
     def on_page_render_failed(self, generation, page_index, message):
         active_key = next(
@@ -1350,6 +1386,15 @@ class PDFViewer(QMainWindow):
         label.setText(f"Render failed\n{message}")
 
     def render_single_page(self, page_index, zoom):
+        if not self.cache_rendered_pages and not self.continuous_mode:
+            pixmap = self.page_to_pixmap(page_index, zoom)
+            self.page_layout.addWidget(
+                self.make_page_label(pixmap, page_index),
+                0,
+                Qt.AlignHCenter,
+            )
+            return
+
         label = self.make_placeholder_page_label(page_index, zoom)
         self.apply_cached_pixmap_to_label(label, page_index, zoom)
         self.page_layout.addWidget(label, 0, Qt.AlignHCenter)
@@ -1360,6 +1405,17 @@ class PDFViewer(QMainWindow):
         row_layout.setContentsMargins(0, 0, 0, 0)
         row_layout.setSpacing(0)
         row_layout.setAlignment(Qt.AlignCenter)
+
+        if not self.cache_rendered_pages and not self.continuous_mode:
+            left_pixmap = self.page_to_pixmap(left_index, zoom)
+            row_layout.addWidget(self.make_page_label(left_pixmap, left_index))
+
+            if right_index is not None and right_index < len(self.doc):
+                right_pixmap = self.page_to_pixmap(right_index, zoom)
+                row_layout.addWidget(self.make_page_label(right_pixmap, right_index))
+
+            self.page_layout.addWidget(row, 0, Qt.AlignHCenter)
+            return
 
         left_label = self.make_placeholder_page_label(left_index, zoom)
         self.apply_cached_pixmap_to_label(left_label, left_index, zoom)
@@ -1577,7 +1633,8 @@ class PDFViewer(QMainWindow):
         self.status_label.setText(
             self.build_status_text(f"{self.current_index + 1}/{len(self.doc)}", zoom)
         )
-        self.render_initial_visible_pages(zoom)
+        if self.cache_rendered_pages:
+            self.render_initial_visible_pages(zoom)
         self.start_parallel_render(zoom, self.render_generation)
 
     def render_view(self):
@@ -1620,8 +1677,9 @@ class PDFViewer(QMainWindow):
             self.schedule_single_page_scroll_restore()
             self.update_slider_range()
 
-        self.start_parallel_render(zoom, generation)
-        self.start_fallback_render(zoom, generation)
+        if self.cache_rendered_pages or self.continuous_mode:
+            self.start_parallel_render(zoom, generation)
+            self.start_fallback_render(zoom, generation)
         self.update_buttons()
 
     def update_buttons(self):
