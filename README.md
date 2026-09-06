@@ -8,9 +8,9 @@ It supports single-page and two-page spreads, continuous scrolling, search, drag
 
 ## Starting the Program
 
-- Run `pdfpro.pyw` directly from Python.
+- Run `PDFViewer.pyw` directly from Python.
 - To open a document immediately, pass the PDF path as a command-line argument:  
-  `python pdfpro.pyw "document.pdf"`
+  `python PDFViewer.pyw "document.pdf"`
 - Click **Open PDF** in the sidebar to browse for a file.
 
 ## Sidebar Controls
@@ -107,4 +107,4 @@ In particular, PyMuPDF is provided under AGPL or a separate commercial license. 
 
 ---
 
-PDF Viewer — PySide6 / PyMuPDF based viewer. Help generated for `pdfpro.pyw`.
+PDF Viewer — PySide6 / PyMuPDF based viewer. Help generated for `PDFViewer.pyw`.
